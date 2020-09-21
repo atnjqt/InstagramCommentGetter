@@ -1,6 +1,59 @@
-## ATN's Parsimonious WWE Instagram Comment Getter (using Selenium + Docker)
+# ATN's Parsimonious WWE Instagram Comment Getter (Using Selenium + Docker)
 
-- So far I have `1.16%` of comments in the **wwe_df**!
+## Getting Started - 09/21/2020
+
+- Added configurations & testing for `docker-compose` which handles running both the `commentGetter` & `chrome` containers needed for automated web browsing data collection of loading more Instagram comments ...
+
+- Currently, the Dockerfile references a specific Instagram URL for a known post w/ many comments --> https://www.instagram.com/p/B61fZE1n9Nv/
+
+```
+cd /path/to/repo/InstagramCommentGetter/docker-compose-app
+
+# This used just one example post w/ lots of comments (testing for scalability)
+cat ./Dockerfile | grep python3
+
+# To build containers
+docker-compose up --build
+
+# If something goes wrong, you can take down just as easily
+docker-compose down
+```
+_______
+### So, how does the docker-composed `commentGetter` container perform?
+
+- The composed container works really nicely, convenient to *not* reuse the same `selenium:chrome-standalone` container for different URLs!
+
+- In my testing, this performed **394 clicks** before crashing (took nearly 12+ hours)... ETL conversion for .html file returned **4936 comments**... We can review this here:
+
+``` python
+# From a jupyter notebook reviewing ./data
+B61fZE1n9Nv_df = pd.read_json('./data/B61fZE1n9Nv.json')
+
+wwe_df = pd.read_json('/Users/etiennejacquot/Documents/Bitbucket/wwe-instagram-rekogcomments/docker_comment_getter2/configs/wwe_df.json')
+
+percentage_of_comments = round((B61fZE1n9Nv_df.shape[0] / wwe_df[wwe_df.posturl.str.contains('B61fZE1n9Nv')].commentcount.values * 100)[0],2)
+
+print('{}% of the comments for {}'.format(percentage_of_comments,wwe_df[wwe_df.posturl.str.contains('B61fZE1n9Nv')].posturl.values[0]))
+```
+
+    67.76% of the comments** for https://www.instagram.com/p/B61fZE1n9Nv/! 
+
+- Not bad, but not great given 394 clicks seems to be an upper limit for how much a browser can click & load into memory...
+    - __PLEASE REMEMBER:__, this percentage is based on the *commentcount.sum* at the time of post extraction w/ PhantomBuster ... likely the true commentcount on IG has gone up, given users are still engaging w/ the post while some bot accounts were probably deleted so some comments are lost ...
+
+
+### Thus, I think this parsimonious commentGetter web automation has some hard limitations for scaling up
+- The problem of scaling up for all posts still remains, as I'm guessing there are some posts w/ MANY comments! 
+- It's approximately a ratio of `1 # of clicks : 12 # comments returned`
+
+![](https://i.imgur.com/MCvSbgO.png)
+
+
+________________
+
+## OLD NOTES (PRE DOCKER-COMPOSE IF YOU WANT TO JUST RUN JHUB NOTEBOOK TO LOOP W/ DOCKERFILES)
+
+- So far I have at least `1.16%` of comments in the **wwe_df**!
 
 - Cloud deployment & docker compose are next ...
 

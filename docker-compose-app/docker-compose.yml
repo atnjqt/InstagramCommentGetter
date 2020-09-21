@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  chrome:
+    image: "selenium/standalone-chrome"
+    volumes:
+      - /dev/shm:/dev/shm
+    ports:
+      - "4444:4444"
+
+  commentgetter:
+    build: .
+    volumes:
+      - /Users/etiennejacquot/Documents/Docker/wwe_ig/data:/data
+    depends_on:
+      - chrome
+    network_mode: "host"
